@@ -1,48 +1,39 @@
 ---
-- name: Setup Development Environment
+- name: Configure Development Environment
   hosts: localhost
+  connection: local
+  become: true  # Ensure sudo privileges for necessary tasks
+
+  vars:
+    bw_session: "{{ lookup('env', 'BW_SESSION') }}"  # Fetch Bitwarden session token from environment
+
+  pre_tasks:
+    # Ensure required tools are installed before running other roles
+    - name: Ensure required base packages are installed
+      ansible.builtin.package:
+        name:
+          - git
+          - curl
+          - software-properties-common  # Needed for adding PPAs
+        state: present
+
+    # Confirm Bitwarden session token exists
+    - name: Check if Bitwarden session is available
+      ansible.builtin.fail:
+        msg: "Bitwarden session not available. Please export BW_SESSION before running."
+      when: bw_session is undefined or bw_session == ""
+
+    - name: Print Bitwarden session status
+      ansible.builtin.debug:
+        msg: "Bitwarden session is available."
+
   tasks:
-    - name: Ensure Git is installed
-      ansible.builtin.package:
+    # Execute the roles for each module (e.g., Git, Neovim, etc.)
+    - name: Set up Git
+      ansible.builtin.include_role:
         name: git
-        state: present
 
-    - name: Install Neovim
-      ansible.builtin.package:
+    - name: Set up Neovim
+      ansible.builtin.include_role:
         name: neovim
-        state: present
-
-    - name: Install Tmux
-      ansible.builtin.package:
-        name: tmux
-        state: present
-
-    - name: Install btop
-      ansible.builtin.package:
-        name: btop
-        state: present
-
-    - name: Set up Git user.name and user.email
-      block:
-        - name: Get Git user.name from Bitwarden
-          ansible.builtin.command:
-            cmd: "bw get item 'Github' --session $BW_SESSION | jq -r '.fields[] | select(.name==\"username\") | .value'"
-          register: git_user_name
-
-        - name: Get Git user.email from Bitwarden
-          ansible.builtin.command:
-            cmd: "bw get item 'Github' --session $BW_SESSION | jq -r '.fields[] | select(.name==\"email\") | .value'"
-          register: git_user_email
-
-        - name: Configure Git user.name
-          community.general.git_config:
-            name: user.name
-            scope: global
-            value: "{{ git_user_name.stdout }}"
-
-        - name: Configure Git user.email
-          community.general.git_config:
-            name: user.email
-            scope: global
-            value: "{{ git_user_email.stdout }}"
 
