@@ -1,0 +1,19 @@
+return {
+  "nvim-lualine/lualine.nvim",
+  config = function()
+    require('lualine').setup({
+      options = {
+        theme = 'dracula'
+      },
+      sections = {
+        lualine_b = {
+          function()
+            local branch = vim.fn.system("git branch --show-current 2>/dev/null")
+            return vim.trim(branch) ~= "" and branch or ""
+          end
+        }
+      }
+    })
+  end
+}
+
