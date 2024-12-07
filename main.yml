@@ -8,7 +8,7 @@
     bw_session: "{{ lookup('env', 'BW_SESSION') }}"  # Fetch Bitwarden session token from environment
 
   pre_tasks:
-    # Ensure required tools are installed before running other roles
+    # Ensure required base packages are installed before running other roles
     - name: Ensure required base packages are installed
       ansible.builtin.package:
         name:
@@ -16,6 +16,22 @@
           - curl
           - software-properties-common  # Needed for adding PPAs
         state: present
+
+    # Check if Bitwarden CLI (bw) is installed
+    - name: Check if Bitwarden CLI is installed
+      ansible.builtin.command: "bw --version"
+      register: bw_check
+      ignore_errors: true
+
+    - name: Set variable if Bitwarden CLI is installed
+      ansible.builtin.set_fact:
+        bw_installed: true
+      when: bw_check.rc == 0
+
+    - name: Fail if Bitwarden CLI is not installed
+      ansible.builtin.fail:
+        msg: "Bitwarden CLI (bw) is not installed. Install it with 'npm install -g @bitwarden/cli'."
+      when: bw_check.rc != 0
 
     # Confirm Bitwarden session token exists
     - name: Check if Bitwarden session is available
