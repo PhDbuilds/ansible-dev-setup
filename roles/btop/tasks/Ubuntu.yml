@@ -1,0 +1,5 @@
+- name: "BTOP | Install"
+  ansible.builtin.apt:
+    name: bpytop
+    state: present
+  become: true
