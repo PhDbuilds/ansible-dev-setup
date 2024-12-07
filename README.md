@@ -36,6 +36,16 @@ sudo apt install -y ansible
 sudo snap install bw
 ```
 
+Note - for ARM you must install Bitwarden CLI through npm:
+```bash
+sudo apt install -y nodejs npm
+npm install -g @bitwarden/cli
+```
+Verify installation
+```bash
+bw --version
+```
+
 7. Login to Bitwarden
 ```bash
 bw login
@@ -45,6 +55,21 @@ bw login
 ```bash
 export BW_SESSION=$(bw unlock --raw)
 ```
+
+Run the following to confirm that this is set up and properly authenticated
+```bash
+bw get item 'Github'
+```
+
+For this to work properly, you must have a login item named "Github" with the following fields:
+- `username`: Your GitHub username
+- `email`: Your Github email
+
+To test this is working properly, you can run the following:
+```bash
+bw get item 'Github' --session $BW_SESSION | jq -r '.fields[] | select(.name=="username") | .value'
+```
+
 9. Install dotfiles
 ```bash
 ansible-playbook main.yml --ask-become-pass
