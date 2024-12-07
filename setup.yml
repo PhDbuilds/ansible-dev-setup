@@ -7,9 +7,19 @@
         name: git
         state: present
 
-    - name: Install Vim
+    - name: Install Neovim
       ansible.builtin.package:
-        name: vim
+        name: neovim
+        state: present
+
+    - name: Install Tmux
+      ansible.builtin.package:
+        name: tmux
+        state: present
+
+    - name: Install btop
+      ansible.builtin.package:
+        name: btop
         state: present
 
     - name: Set up Git user.name and user.email
