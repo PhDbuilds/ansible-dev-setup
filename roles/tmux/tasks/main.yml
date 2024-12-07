@@ -1,4 +1,3 @@
----
 - name: "Tmux | Checking for Distribution Config: {{ ansible_distribution }}"
   ansible.builtin.stat:
     path: "{{ role_path }}/tasks/{{ ansible_distribution }}.yml"
@@ -15,8 +14,8 @@
 
 - name: "Tmux | Configure tmux"
   ansible.builtin.copy:
-    src: tmux
-    dest: "{{ ansible_user_dir }}/.config/"
+    src: tmux/tmux.conf
+    dest: "{{ ansible_user_dir }}/.tmux.conf"
     mode: "0644"
-    directory_mode: "0755"
     force: true
+
