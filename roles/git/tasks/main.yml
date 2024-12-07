@@ -2,14 +2,20 @@
 - name: Set up Git user.name and user.email
   block:
     - name: Get Git user.name from Bitwarden
-      ansible.builtin.command:
-        cmd: "bw get item 'Github' --session $BW_SESSION | jq -r '.fields[] | select(.name==\"username\") | .value'"
+      ansible.builtin.shell: |
+        bw get item 'Github' --session $BW_SESSION | jq -r '.fields[] | select(.name=="username") | .value'
       register: git_user_name
+      when: bw_installed
+      changed_when: false
+      no_log: true
 
     - name: Get Git user.email from Bitwarden
-      ansible.builtin.command:
-        cmd: "bw get item 'Github' --session $BW_SESSION | jq -r '.fields[] | select(.name==\"email\") | .value'"
+      ansible.builtin.shell: |
+        bw get item 'Github' --session $BW_SESSION | jq -r '.fields[] | select(.name=="email") | .value'
       register: git_user_email
+      when: bw_installed
+      changed_when: false
+      no_log: true
 
     - name: Configure Git user.name
       community.general.git_config:
