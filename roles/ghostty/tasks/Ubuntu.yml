@@ -1,5 +1,16 @@
 ---
-- name: "Ghostty | {{ ansible_distribution }} | Download and install Ghostty"
+- name: "Ghostty | {{ ansible_distribution }} | Install dependencies"
+  ansible.builtin.apt:
+    name:
+      - libgtk-4-dev
+      - libadwaita-1-dev
+      - git
+      - curl
+      - wget
+    state: present
+  become: true
+
+- name: "Ghostty | {{ ansible_distribution }} | Build and install Ghostty"
   block:
     - name: "Ghostty | Create temp directory"
       ansible.builtin.tempfile:
@@ -7,34 +18,42 @@
         suffix: ghostty
       register: ghostty_temp_dir
 
-    - name: "Ghostty | Download Ghostty AppImage"
+    - name: "Ghostty | Download Zig 0.13"
       ansible.builtin.get_url:
-        url: "https://release.files.ghostty.org/ghostty-1.0.1-x86_64.AppImage"
-        dest: "{{ ghostty_temp_dir.path }}/ghostty.AppImage"
-        mode: "0755"
-
-    - name: "Ghostty | Install Ghostty to /usr/local/bin"
-      ansible.builtin.copy:
-        src: "{{ ghostty_temp_dir.path }}/ghostty.AppImage"
-        dest: "/usr/local/bin/ghostty"
-        mode: "0755"
-        remote_src: true
-      become: true
-
-    - name: "Ghostty | Create desktop entry"
-      ansible.builtin.copy:
-        content: |
-          [Desktop Entry]
-          Type=Application
-          Name=Ghostty
-          Comment=A fast, feature-rich, and cross-platform terminal emulator
-          Exec=/usr/local/bin/ghostty
-          Icon=utilities-terminal
-          Terminal=false
-          Categories=System;TerminalEmulator;
-        dest: "/usr/share/applications/ghostty.desktop"
+        url: "https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz"
+        dest: "{{ ghostty_temp_dir.path }}/zig.tar.xz"
         mode: "0644"
+
+    - name: "Ghostty | Extract Zig"
+      ansible.builtin.unarchive:
+        src: "{{ ghostty_temp_dir.path }}/zig.tar.xz"
+        dest: "{{ ghostty_temp_dir.path }}"
+        remote_src: true
+
+    - name: "Ghostty | Clone Ghostty repository"
+      ansible.builtin.git:
+        repo: "https://github.com/ghostty-org/ghostty.git"
+        dest: "{{ ghostty_temp_dir.path }}/ghostty"
+        version: "v1.0.0"
+
+    - name: "Ghostty | Build Ghostty"
+      ansible.builtin.command:
+        cmd: "{{ ghostty_temp_dir.path }}/zig-linux-x86_64-0.13.0/zig build -p {{ ansible_user_dir }}/.local -Doptimize=ReleaseFast"
+        chdir: "{{ ghostty_temp_dir.path }}/ghostty"
+      become: false
+
+    - name: "Ghostty | Update desktop database"
+      ansible.builtin.command: update-desktop-database {{ ansible_user_dir }}/.local/share/applications
+      become: false
+      ignore_errors: true
+
+    - name: "Ghostty | Create symlink to /usr/local/bin"
+      ansible.builtin.file:
+        src: "{{ ansible_user_dir }}/.local/bin/ghostty"
+        dest: "/usr/local/bin/ghostty"
+        state: link
       become: true
+      ignore_errors: true
 
   always:
     - name: "Ghostty | Clean up temp directory"
