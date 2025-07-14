@@ -1,0 +1,15 @@
+- name: "Neovim | {{ ansible_distribution }} | Dependencies"
+  community.general.homebrew:
+    name:
+      - cmake
+      - curl
+      - pkg-config
+      - libtool
+      - unzip
+      - ripgrep
+    state: present
+
+- name: "Neovim | {{ ansible_distribution }} | Install"
+  community.general.homebrew:
+    name: neovim
+    state: present

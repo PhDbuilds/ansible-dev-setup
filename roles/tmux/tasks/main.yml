@@ -14,7 +14,7 @@
 
 - name: "Tmux | Configure tmux"
   ansible.builtin.copy:
-    src: tmux/tmux.conf
+    src: tmux.conf
     dest: "{{ ansible_user_dir }}/.tmux.conf"
     mode: "0644"
     force: true

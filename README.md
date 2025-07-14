@@ -1,83 +1,56 @@
 # ansible-dev-setup
 
-*This is currently only supported on Ubuntu*
+Cross-platform development environment setup using Ansible. Supports Ubuntu, Debian, and macOS.
 
 ## Installation
-1. Make sure you're updated
+
+### Prerequisites
+
+**Ubuntu/Debian:**
 ```bash
+# Update system
 sudo apt update && sudo apt upgrade -y
-```
 
-2. Install essential tools
-```bash
-sudo apt install -y git curl
-```
+# Install essential tools
+sudo apt install -y git curl software-properties-common
 
-3. Clone the files
-```bash
-git clone https://github.com/PhDbuilds/ansible-dev-setup.git
-```
-
-4. cd into directory
-```bash
-cd ~/dotfiles
-```
-
-5. Install Ansible
-```bash
-sudo apt update
-sudo apt install -y software-properties-common
+# Install Ansible
 sudo add-apt-repository --yes --update ppa:ansible/ansible
 sudo apt install -y ansible
 ```
 
-6. This relies on Bitwarden CLI being installed
+**macOS:**
 ```bash
-sudo snap install bw
+# Install Ansible via pip (Homebrew will be installed automatically by the playbook)
+pip3 install ansible
+
+# Or install via Homebrew if you already have it
+brew install ansible
 ```
 
-Note - for ARM you must install Bitwarden CLI through npm:
+### Setup
+
+1. Clone the repository
 ```bash
-sudo apt install -y nodejs npm
-npm install -g @bitwarden/cli
-```
-Verify installation
-```bash
-bw --version
+git clone https://github.com/PhDbuilds/ansible-dev-setup.git
+cd ansible-dev-setup
 ```
 
-7. Login to Bitwarden
-```bash
-bw login
-```
-
-8. Unlock vault and export session
-```bash
-export BW_SESSION=$(bw unlock --raw)
-```
-
-Run the following to confirm that this is set up and properly authenticated
-```bash
-bw get item 'Github'
-```
-
-For this to work properly, you must have a login item named "Github" with the following fields:
-- `username`: Your GitHub username
-- `email`: Your Github email
-
-To test this is working properly, you can run the following:
-```bash
-bw get item 'Github' --session $BW_SESSION | jq -r '.fields[] | select(.name=="username") | .value'
-```
-
-9. Install dotfiles
+2. Run the playbook
 ```bash
 ansible-playbook main.yml --ask-become-pass
 ```
 
-10. Verify git was configured
-```bash
-git config --get user.name
-git config --get user.email
-```
+The playbook will:
+- Install Git, Neovim, tmux, btop, and Ghostty
+- Configure tmux and Neovim with custom settings
+- Prompt for Git username and email during setup
+
+## What's Included
+
+- **Git**: Version control with global configuration
+- **Neovim**: Modern Vim-based editor with Lua configuration
+- **tmux**: Terminal multiplexer with custom configuration
+- **btop**: System resource monitor
+- **Ghostty**: Fast, cross-platform terminal emulator
 

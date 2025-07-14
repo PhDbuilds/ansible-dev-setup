@@ -4,44 +4,29 @@
   connection: local
   become: true  # Ensure sudo privileges for necessary tasks
 
-  vars:
-    bw_session: "{{ lookup('env', 'BW_SESSION') }}"  # Fetch Bitwarden session token from environment
-
   pre_tasks:
     # Ensure required base packages are installed before running other roles
-    - name: Ensure required base packages are installed
+    - name: Ensure required base packages are installed (Debian/Ubuntu)
       ansible.builtin.package:
         name:
           - git
           - curl
           - software-properties-common  # Needed for adding PPAs
         state: present
+      when: ansible_os_family == "Debian"
 
-    # Check if Bitwarden CLI (bw) is installed
-    - name: Check if Bitwarden CLI is installed
-      ansible.builtin.command: "bw --version"
-      register: bw_check
-      ignore_errors: true
+    - name: Ensure Homebrew is installed (macOS)
+      ansible.builtin.stat:
+        path: /opt/homebrew/bin/brew
+      register: homebrew_check
+      when: ansible_os_family == "Darwin"
 
-    - name: Set variable if Bitwarden CLI is installed
-      ansible.builtin.set_fact:
-        bw_installed: true
-      when: bw_check.rc == 0
+    - name: Install Homebrew (macOS)
+      ansible.builtin.shell: |
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      when: ansible_os_family == "Darwin" and not homebrew_check.stat.exists
+      become: false
 
-    - name: Fail if Bitwarden CLI is not installed
-      ansible.builtin.fail:
-        msg: "Bitwarden CLI (bw) is not installed. Install it with 'npm install -g @bitwarden/cli'."
-      when: bw_check.rc != 0
-
-    # Confirm Bitwarden session token exists
-    - name: Check if Bitwarden session is available
-      ansible.builtin.fail:
-        msg: "Bitwarden session not available. Please export BW_SESSION before running."
-      when: bw_session is undefined or bw_session == ""
-
-    - name: Print Bitwarden session status
-      ansible.builtin.debug:
-        msg: "Bitwarden session is available."
 
   tasks:
     # Execute the roles for each module (e.g., Git, Neovim, etc.)
@@ -52,4 +37,16 @@
     - name: Set up Neovim
       ansible.builtin.include_role:
         name: neovim
+
+    - name: Set up tmux
+      ansible.builtin.include_role:
+        name: tmux
+
+    - name: Set up btop
+      ansible.builtin.include_role:
+        name: btop
+
+    - name: Set up Ghostty
+      ansible.builtin.include_role:
+        name: ghostty
 

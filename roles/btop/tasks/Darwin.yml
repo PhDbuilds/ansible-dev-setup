@@ -1,0 +1,4 @@
+- name: "BTOP | Install"
+  community.general.homebrew:
+    name: btop
+    state: present

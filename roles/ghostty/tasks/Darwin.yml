@@ -1,0 +1,5 @@
+---
+- name: "Ghostty | {{ ansible_distribution }} | Install via Homebrew"
+  community.general.homebrew_cask:
+    name: ghostty
+    state: present
